@@ -9,23 +9,26 @@ options {
     tokenVocab = RNApolisLexer;
 }
 
-@header {
-   package unicam.parser.rnapolis;
-}
+rnapolisFile:
+    strandSection+ EOF
+;
 
-// Parser rules
-rnapolisFile: strandSection+ EOF;
+strandSection:
+    strandName sequenceLine interactionLine*
+;
 
-strandSection: header sequenceLine interactionLine*;
+strandName:
+    TITLE
+;
 
-header: HEADER_START strandName NEWLINE;
+sequenceLine:
+    NUCLEOTIDE
+;
 
-strandName: H_ID;
+interactionLine:
+    INTERACTION_TYPE interactionPattern
+;
 
-sequenceLine: SEQ_START WS nucleotideSequence NEWLINE;
-
-nucleotideSequence: S_NUCLEOTIDE+;
-
-interactionLine: INTERACTION_TYPE WS interactionPattern NEWLINE;
-
-interactionPattern: SYMBOL+;
+interactionPattern:
+    SYMBOL+
+;

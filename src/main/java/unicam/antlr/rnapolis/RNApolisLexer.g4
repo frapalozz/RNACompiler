@@ -1,42 +1,63 @@
 /*
  * ANTLR 4 LEXER grammar for RNApolis output
- * Uses lexical modes to separate contexts
  *
  * @author Francesco Palozzi
  */
 lexer grammar RNApolisLexer;
 
-// Default mode - for everything except headers and sequences
-INTERACTION_TYPE: [ct] ('WW'|'WH'|'HW'|'HH'|'WS'|'SW'|'HS'|'SH'|'SS');
+// ------------------------------------------------
+// Fragments
+// ------------------------------------------------
+fragment WS_CHAR: [ \t];
+fragment NEWLINE_CHAR: '\r'? '\n';
+fragment IUPAC_CODE: [ACGUacguTtRrYysSWwKkMmBbDdHhVvNn-];
+fragment NON_STANDARD_CODE: ["?]~[-+=/47P0I];
 
-SYMBOL: '.'
-      | '(' | ')'
-      | '[' | ']'
-      | '{' | '}'
-      | '<' | '>'
-      | [A-Z]
-      | [a-z];
 
-WS: [ \t]+ -> skip;
-NEWLINE: '\r'? '\n' -> skip;
-COMMENT: '#' ~[\r\n]* -> skip;
+// ----------------------------------------------------------------
+// Default mode - for everything except specialized modes
+// ----------------------------------------------------------------
+WS: WS_CHAR+ -> skip;
+NEWLINE: NEWLINE_CHAR -> skip;
 
-// Switch to HEADER mode when we see '>'
-HEADER_START: '>' -> pushMode(HEADER_MODE);
+// Switch to HEADER mode when see '>'
+HEADER_START: '>' -> skip, pushMode(HEADER_MODE);
 
-// Switch to SEQUENCE mode when we see 'seq'
-SEQ_START: 'seq' -> pushMode(SEQ_MODE);
+// Switch to SEQUENCE mode when see 'seq'
+SEQ_START: 'seq' -> skip, pushMode(SEQ_MODE);
 
+// Switch to INTERACTION mode when see 'cWW', 'tHW',...
+INTERACTION_TYPE: [ct][WHS][WHS] -> pushMode(INT_MODE);
+
+
+// ------------------------------------------------
 // Header mode - after '>'
+// ------------------------------------------------
 mode HEADER_MODE;
 
-H_ID: [a-zA-Z_] [a-zA-Z0-9_]*;
-H_WS: [ \t]+ -> skip;
-H_NEWLINE: '\r'? '\n' -> popMode;
+TITLE: [a-zA-Z_][a-zA-Z0-9_]*;
 
+H_NEWLINE: NEWLINE_CHAR -> skip, popMode;
+H_WS: WS_CHAR+ -> skip;
+
+
+// ------------------------------------------------
 // Sequence mode - after 'seq'
+// ------------------------------------------------
 mode SEQ_MODE;
 
-S_WS: [ \t]+ -> skip;
-S_NUCLEOTIDE: [ACGUacgu]+;
-S_NEWLINE: '\r'? '\n' -> popMode;
+NUCLEOTIDE: (IUPAC_CODE | NON_STANDARD_CODE)+;
+
+S_NEWLINE: NEWLINE_CHAR -> skip, popMode;
+S_WS: WS_CHAR+ -> skip;
+
+
+// ------------------------------------------------
+// INTERACTION mode - after cWW, tHW,...
+// ------------------------------------------------
+mode INT_MODE;
+
+SYMBOL: [.()[{}<>] | ']' | [A-Z] | [a-z];
+
+I_NEWLINE: NEWLINE_CHAR -> skip, popMode;
+I_WS: WS_CHAR+ -> skip;

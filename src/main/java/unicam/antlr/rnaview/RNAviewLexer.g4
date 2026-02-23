@@ -18,6 +18,7 @@ fragment NON_STANDARD_CODE: ["?]~[-+=/47P0I];
 // ----------------------------------------------------------------
 WS: WS_CHAR+ -> skip;
 NEWLINE: NEWLINE_CHAR -> skip;
+UNCOMMON_RESIDUE: 'uncommon residue' [a-zA-Z0-9#:[\] ]* -> skip;
 
 // Switch to FILE_NAME mode when see 'PDB data file name: '
 FILE: 'PDB data file name: ' -> skip, pushMode(FILE_NAME_MODE);
@@ -43,17 +44,17 @@ FILE_NAME
 // ------------------------------------------------
 mode PAIRS_MODE;
 
-CHARS_TO_SKIP: [_,: ] -> skip;
+CHARS_TO_SKIP: [_,: \n] -> skip;
 
 CHAIN: [A-Z];
 
 NUMBER: [1-9]+[0-9]*;
 
-BASE_PAIR: [A-Z]'-'[A-Z];
+BASE_PAIR: [a-zA-Z]'-'[a-zA-Z];
 
-BASE_PAIR_ANNOTATION: [SWH+-]'/'[SWH+-](' cis'|' tran') | 'stacked';
+BASE_PAIR_ANNOTATION: [sSWH+-.]'/'[sSWH+-.](' cis'|' tran') | 'stacked';
 
-SAENGER: [XI]+ | 'n/a' | '!('[bs]'_s)';
+SAENGER: [XVI]+ | 'n/a' | '!' ('1H')? '('[bs]'_'[bs]')';
 
 END_PAIR: 'END_base-pair' -> skip, popMode, pushMode(EXTRA_MODE);
 
